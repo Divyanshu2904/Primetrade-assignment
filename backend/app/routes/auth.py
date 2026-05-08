@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify  # pyright: ignore[reportMissingImports]
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity  # pyright: ignore[reportMissingImports]
 from app import db
 from app.models.user import User
