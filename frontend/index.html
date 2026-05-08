@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Primetrade-assignment</title>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: #f0f4ff; color: #1e293b; }
+
+    /* Auth */
+    .auth-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .auth-card { background: white; border-radius: 16px; padding: 40px; width: 400px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+    .auth-card h1 { font-size: 28px; font-weight: 700; color: #667eea; text-align: center; margin-bottom: 8px; }
+    .auth-card p { text-align: center; color: #64748b; margin-bottom: 28px; font-size: 14px; }
+    .tab-row { display: flex; gap: 8px; margin-bottom: 24px; }
+    .tab-btn { flex: 1; padding: 10px; border: 2px solid #e2e8f0; background: white; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; color: #64748b; transition: all .2s; }
+    .tab-btn.active { border-color: #667eea; background: #667eea; color: white; }
+
+    /* Form */
+    .form-group { margin-bottom: 16px; }
+    label { display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 6px; }
+    input, select, textarea { width: 100%; padding: 10px 14px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; transition: border .2s; outline: none; }
+    input:focus, select:focus, textarea:focus { border-color: #667eea; }
+    textarea { resize: vertical; min-height: 80px; }
+    .btn { width: 100%; padding: 12px; background: #667eea; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; transition: opacity .2s; }
+    .btn:hover { opacity: 0.9; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-danger { background: #ef4444; }
+    .btn-sm { width: auto; padding: 6px 14px; font-size: 13px; }
+    .btn-outline { background: white; color: #667eea; border: 2px solid #667eea; }
+
+    /* Alerts */
+    .alert { padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; font-size: 14px; }
+    .alert-error { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+    .alert-success { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+
+    /* Dashboard */
+    .app-wrap { min-height: 100vh; display: flex; flex-direction: column; }
+    nav { background: white; padding: 0 28px; height: 60px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 1px 8px rgba(0,0,0,0.08); position: sticky; top: 0; z-index: 10; }
+    nav .logo { font-size: 20px; font-weight: 700; color: #667eea; }
+    nav .nav-right { display: flex; align-items: center; gap: 16px; }
+    .badge { background: #667eea; color: white; font-size: 11px; padding: 2px 8px; border-radius: 20px; text-transform: uppercase; }
+    .badge.admin { background: #f59e0b; }
+    .logout-btn { background: none; border: 2px solid #e2e8f0; padding: 6px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; color: #64748b; font-weight: 600; }
+    .logout-btn:hover { border-color: #667eea; color: #667eea; }
+
+    .main { max-width: 900px; margin: 0 auto; padding: 28px 20px; width: 100%; }
+
+    /* Stats */
+    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 28px; }
+    .stat-card { background: white; border-radius: 12px; padding: 20px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    .stat-card .num { font-size: 32px; font-weight: 700; color: #667eea; }
+    .stat-card .lbl { font-size: 13px; color: #64748b; margin-top: 4px; }
+
+    /* Create Task */
+    .card { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 24px; }
+    .card h2 { font-size: 18px; font-weight: 700; margin-bottom: 16px; color: #1e293b; }
+    .inline-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    /* Task List */
+    .filters { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+    .filter-btn { padding: 6px 14px; border: 2px solid #e2e8f0; background: white; border-radius: 20px; cursor: pointer; font-size: 13px; font-weight: 600; color: #64748b; transition: all .2s; }
+    .filter-btn.active { border-color: #667eea; background: #667eea; color: white; }
+    .task-list { display: flex; flex-direction: column; gap: 12px; }
+    .task-item { background: white; border-radius: 12px; padding: 18px 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); display: flex; align-items: flex-start; gap: 14px; border-left: 4px solid #e2e8f0; }
+    .task-item.high { border-left-color: #ef4444; }
+    .task-item.medium { border-left-color: #f59e0b; }
+    .task-item.low { border-left-color: #22c55e; }
+    .task-item.completed { opacity: 0.65; }
+    .task-content { flex: 1; }
+    .task-title { font-weight: 600; font-size: 15px; margin-bottom: 4px; }
+    .task-desc { font-size: 13px; color: #64748b; margin-bottom: 8px; }
+    .task-meta { display: flex; gap: 8px; flex-wrap: wrap; }
+    .chip { padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+    .chip-status-pending { background: #fef9c3; color: #854d0e; }
+    .chip-status-in_progress { background: #dbeafe; color: #1d4ed8; }
+    .chip-status-completed { background: #dcfce7; color: #166534; }
+    .chip-priority-high { background: #fee2e2; color: #991b1b; }
+    .chip-priority-medium { background: #fef3c7; color: #92400e; }
+    .chip-priority-low { background: #dcfce7; color: #166534; }
+    .task-actions { display: flex; gap: 8px; align-items: center; }
+
+    /* Modal */
+    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
+    .modal { background: white; border-radius: 16px; padding: 28px; width: 100%; max-width: 480px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+    .modal h2 { font-size: 20px; font-weight: 700; margin-bottom: 20px; }
+    .modal-footer { display: flex; gap: 10px; margin-top: 20px; }
+    .empty { text-align: center; padding: 40px; color: #94a3b8; }
+    .empty .icon { font-size: 48px; margin-bottom: 12px; }
+
+    @media (max-width: 600px) {
+      .inline-row { grid-template-columns: 1fr; }
+      .stats-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const API = "http://localhost:5000/api/v1";
+
+// ─── API HELPERS ─────────────────────────────────────────────────────────────
+const api = {
+  headers: (token) => ({
+    "Content-Type": "application/json",
+    ...(token ? { Authorization: `Bearer ${token}` } : {})
+  }),
+  async post(url, body, token) {
+    const r = await fetch(API + url, { method: "POST", headers: api.headers(token), body: JSON.stringify(body) });
+    return r.json();
+  },
+  async get(url, token, params = {}) {
+    const q = new URLSearchParams(params).toString();
+    const r = await fetch(API + url + (q ? "?" + q : ""), { headers: api.headers(token) });
+    return r.json();
+  },
+  async put(url, body, token) {
+    const r = await fetch(API + url, { method: "PUT", headers: api.headers(token), body: JSON.stringify(body) });
+    return r.json();
+  },
+  async del(url, token) {
+    const r = await fetch(API + url, { method: "DELETE", headers: api.headers(token) });
+    return r.json();
+  }
+};
+
+// ─── COMPONENTS ──────────────────────────────────────────────────────────────
+function Alert({ msg, type }) {
+  if (!msg) return null;
+  return <div className={`alert alert-${type}`}>{msg}</div>;
+}
+
+function AuthPage({ onLogin }) {
+  const [tab, setTab] = React.useState("login");
+  const [form, setForm] = React.useState({ username: "", email: "", password: "" });
+  const [msg, setMsg] = React.useState(null);
+  const [loading, setLoading] = React.useState(false);
+
+  const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+
+  const submit = async () => {
+    setMsg(null);
+    setLoading(true);
+    try {
+      const endpoint = tab === "login" ? "/auth/login" : "/auth/register";
+      const body = tab === "login"
+        ? { email: form.email, password: form.password }
+        : { username: form.username, email: form.email, password: form.password };
+      const res = await api.post(endpoint, body);
+      if (res.success) {
+        localStorage.setItem("token", res.data.access_token);
+        localStorage.setItem("user", JSON.stringify(res.data.user));
+        onLogin(res.data.user, res.data.access_token);
+      } else {
+        setMsg({ text: res.message, type: "error" });
+      }
+    } catch {
+      setMsg({ text: "Connection failed. Is the backend running?", type: "error" });
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div className="auth-wrap">
+      <div className="auth-card">
+        <h1>Primetrade-assignment</h1>
+        <p>Manage your tasks efficiently</p>
+        <div className="tab-row">
+          <button className={`tab-btn ${tab === "login" ? "active" : ""}`} onClick={() => setTab("login")}>Login</button>
+          <button className={`tab-btn ${tab === "register" ? "active" : ""}`} onClick={() => setTab("register")}>Register</button>
+        </div>
+        <Alert msg={msg?.text} type={msg?.type} />
+        {tab === "register" && (
+          <div className="form-group">
+            <label>Username</label>
+            <input placeholder="johndoe" value={form.username} onChange={e => set("username", e.target.value)} />
+          </div>
+        )}
+        <div className="form-group">
+          <label>Email</label>
+          <input type="email" placeholder="john@example.com" value={form.email} onChange={e => set("email", e.target.value)} />
+        </div>
+        <div className="form-group">
+          <label>Password</label>
+          <input type="password" placeholder="••••••••" value={form.password} onChange={e => set("password", e.target.value)}
+            onKeyDown={e => e.key === "Enter" && submit()} />
+        </div>
+        <button className="btn" onClick={submit} disabled={loading}>
+          {loading ? "Please wait..." : tab === "login" ? "Login" : "Create Account"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function TaskModal({ task, onClose, onSave }) {
+  const [form, setForm] = React.useState(task || { title: "", description: "", status: "pending", priority: "medium", due_date: "" });
+  const [msg, setMsg] = React.useState(null);
+  const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+
+  return (
+    <div className="overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="modal">
+        <h2>{task ? "Edit Task" : "New Task"}</h2>
+        <Alert msg={msg?.text} type={msg?.type} />
+        <div className="form-group">
+          <label>Title *</label>
+          <input placeholder="Task title" value={form.title} onChange={e => set("title", e.target.value)} />
+        </div>
+        <div className="form-group">
+          <label>Description</label>
+          <textarea placeholder="Optional details..." value={form.description} onChange={e => set("description", e.target.value)} />
+        </div>
+        <div className="inline-row">
+          <div className="form-group">
+            <label>Status</label>
+            <select value={form.status} onChange={e => set("status", e.target.value)}>
+              <option value="pending">Pending</option>
+              <option value="in_progress">In Progress</option>
+              <option value="completed">Completed</option>
+            </select>
+          </div>
+          <div className="form-group">
+            <label>Priority</label>
+            <select value={form.priority} onChange={e => set("priority", e.target.value)}>
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+            </select>
+          </div>
+        </div>
+        <div className="form-group">
+          <label>Due Date</label>
+          <input type="datetime-local" value={form.due_date?.slice(0, 16) || ""} onChange={e => set("due_date", e.target.value)} />
+        </div>
+        <div className="modal-footer">
+          <button className="btn btn-outline btn-sm" onClick={onClose} style={{flex:1}}>Cancel</button>
+          <button className="btn btn-sm" style={{flex:2}} onClick={() => {
+            if (!form.title.trim()) { setMsg({ text: "Title is required", type: "error" }); return; }
+            onSave(form);
+          }}>
+            {task ? "Update Task" : "Create Task"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Dashboard({ user, token, onLogout }) {
+  const [tasks, setTasks] = React.useState([]);
+  const [filter, setFilter] = React.useState("all");
+  const [modal, setModal] = React.useState(null); // null | "create" | task_obj
+  const [msg, setMsg] = React.useState(null);
+  const [loading, setLoading] = React.useState(true);
+
+  const showMsg = (text, type = "success") => {
+    setMsg({ text, type });
+    setTimeout(() => setMsg(null), 3500);
+  };
+
+  const loadTasks = async () => {
+    setLoading(true);
+    const params = filter !== "all" ? { status: filter } : {};
+    const res = await api.get("/tasks", token, params);
+    if (res.success) setTasks(res.data);
+    setLoading(false);
+  };
+
+  React.useEffect(() => { loadTasks(); }, [filter]);
+
+  const handleSave = async (form) => {
+    try {
+      let res;
+      if (modal && modal.id) {
+        res = await api.put(`/tasks/${modal.id}`, form, token);
+      } else {
+        res = await api.post("/tasks", form, token);
+      }
+      if (res.success) {
+        showMsg(modal?.id ? "Task updated!" : "Task created!");
+        setModal(null);
+        loadTasks();
+      } else {
+        showMsg(res.message, "error");
+      }
+    } catch {
+      showMsg("Request failed", "error");
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Delete this task?")) return;
+    const res = await api.del(`/tasks/${id}`, token);
+    if (res.success) { showMsg("Task deleted"); loadTasks(); }
+    else showMsg(res.message, "error");
+  };
+
+  const stats = {
+    total: tasks.length,
+    pending: tasks.filter(t => t.status === "pending").length,
+    done: tasks.filter(t => t.status === "completed").length,
+  };
+
+  const filters = ["all", "pending", "in_progress", "completed"];
+
+  return (
+    <div className="app-wrap">
+      <nav>
+        <span className="logo">✅ Primetrade-assignment</span>
+        <div className="nav-right">
+          <span style={{ fontSize: 14, color: "#64748b" }}>Hi, <strong>{user.username}</strong></span>
+          <span className={`badge ${user.role === "admin" ? "admin" : ""}`}>{user.role}</span>
+          <button className="logout-btn" onClick={onLogout}>Logout</button>
+        </div>
+      </nav>
+
+      <div className="main">
+        {msg && <Alert msg={msg.text} type={msg.type} />}
+
+        <div className="stats-row">
+          <div className="stat-card"><div className="num">{stats.total}</div><div className="lbl">Total Tasks</div></div>
+          <div className="stat-card"><div className="num" style={{color:"#f59e0b"}}>{stats.pending}</div><div className="lbl">Pending</div></div>
+          <div className="stat-card"><div className="num" style={{color:"#22c55e"}}>{stats.done}</div><div className="lbl">Completed</div></div>
+        </div>
+
+        <div className="card">
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+            <h2 style={{ margin: 0 }}>My Tasks</h2>
+            <button className="btn btn-sm" style={{ width: "auto" }} onClick={() => setModal("create")}>+ New Task</button>
+          </div>
+          <div className="filters">
+            {filters.map(f => (
+              <button key={f} className={`filter-btn ${filter === f ? "active" : ""}`} onClick={() => setFilter(f)}>
+                {f === "all" ? "All" : f.replace("_", " ").replace(/\b\w/g, c => c.toUpperCase())}
+              </button>
+            ))}
+          </div>
+
+          {loading ? (
+            <div className="empty"><div className="icon">⏳</div><p>Loading tasks...</p></div>
+          ) : tasks.length === 0 ? (
+            <div className="empty"><div className="icon">📋</div><p>No tasks found. Create your first task!</p></div>
+          ) : (
+            <div className="task-list">
+              {tasks.map(task => (
+                <div key={task.id} className={`task-item ${task.priority} ${task.status === "completed" ? "completed" : ""}`}>
+                  <div className="task-content">
+                    <div className="task-title">{task.title}</div>
+                    {task.description && <div className="task-desc">{task.description}</div>}
+                    <div className="task-meta">
+                      <span className={`chip chip-status-${task.status}`}>{task.status.replace("_", " ")}</span>
+                      <span className={`chip chip-priority-${task.priority}`}>{task.priority}</span>
+                      {task.due_date && <span className="chip" style={{ background: "#f1f5f9", color: "#475569" }}>📅 {new Date(task.due_date).toLocaleDateString()}</span>}
+                    </div>
+                  </div>
+                  <div className="task-actions">
+                    <button className="btn btn-outline btn-sm" onClick={() => setModal(task)}>Edit</button>
+                    <button className="btn btn-danger btn-sm" onClick={() => handleDelete(task.id)}>Del</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {(modal === "create" || (modal && modal.id)) && (
+        <TaskModal
+          task={modal === "create" ? null : modal}
+          onClose={() => setModal(null)}
+          onSave={handleSave}
+        />
+      )}
+    </div>
+  );
+}
+
+// ─── APP ROOT ─────────────────────────────────────────────────────────────────
+function App() {
+  const [auth, setAuth] = React.useState(() => {
+    try {
+      const token = localStorage.getItem("token");
+      const user = JSON.parse(localStorage.getItem("user") || "null");
+      return token && user ? { token, user } : null;
+    } catch { return null; }
+  });
+
+  const handleLogin = (user, token) => setAuth({ user, token });
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    setAuth(null);
+  };
+
+  if (!auth) return <AuthPage onLogin={handleLogin} />;
+  return <Dashboard user={auth.user} token={auth.token} onLogout={handleLogout} />;
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
