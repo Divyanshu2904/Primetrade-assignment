@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Primetrade-assignment</title>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+    
+    body { 
+      background: #0f172a; 
+      color: #f8fafc; 
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Animated Background Orbs */
+    body::before, body::after {
+      content: ''; position: fixed; border-radius: 50%; filter: blur(100px); z-index: -1; opacity: 0.5;
+    }
+    body::before {
+      width: 400px; height: 400px; background: #6366f1; top: -100px; left: -100px; animation: float 10s infinite alternate;
+    }
+    body::after {
+      width: 500px; height: 500px; background: #ec4899; bottom: -150px; right: -150px; animation: float 12s infinite alternate-reverse;
+    }
+    @keyframes float { 0% { transform: translate(0, 0); } 100% { transform: translate(50px, 50px); } }
+
+    /* Glassmorphism Utilities */
+    .glass {
+      background: rgba(30, 41, 59, 0.6);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Auth */
+    .auth-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .auth-card { border-radius: 24px; padding: 48px; width: 100%; max-width: 440px; position: relative; overflow: hidden; }
+    .auth-card::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 100%); pointer-events: none; }
+    .auth-card h1 { font-size: 32px; font-weight: 700; background: linear-gradient(to right, #a855f7, #ec4899); -webkit-background-clip: text; color: transparent; text-align: center; margin-bottom: 8px; letter-spacing: -0.5px; }
+    .auth-card p { text-align: center; color: #94a3b8; margin-bottom: 32px; font-size: 15px; }
+    
+    .tab-row { display: flex; gap: 12px; margin-bottom: 32px; background: rgba(15, 23, 42, 0.6); padding: 6px; border-radius: 12px; }
+    .tab-btn { flex: 1; padding: 12px; border: none; background: transparent; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; color: #94a3b8; transition: all .3s ease; }
+    .tab-btn.active { background: rgba(255,255,255,0.1); color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+
+    /* Form */
+    .form-group { margin-bottom: 20px; }
+    label { display: block; font-size: 13px; font-weight: 500; color: #cbd5e1; margin-bottom: 8px; }
+    input, select, textarea { 
+      width: 100%; padding: 14px 16px; 
+      background: rgba(15, 23, 42, 0.6); 
+      border: 1px solid rgba(255,255,255,0.1); 
+      border-radius: 12px; font-size: 15px; color: #f8fafc; 
+      transition: all .3s ease; outline: none; 
+    }
+    input:focus, select:focus, textarea:focus { border-color: #a855f7; box-shadow: 0 0 0 4px rgba(168, 85, 247, 0.15); background: rgba(15, 23, 42, 0.8); }
+    input::placeholder, textarea::placeholder { color: #475569; }
+    textarea { resize: vertical; min-height: 100px; }
+    select option { background: #1e293b; color: white; }
+
+    .btn { 
+      width: 100%; padding: 14px; 
+      background: linear-gradient(135deg, #8b5cf6 0%, #d946ef 100%); 
+      color: white; border: none; border-radius: 12px; 
+      font-size: 15px; font-weight: 600; cursor: pointer; 
+      transition: all .3s ease; box-shadow: 0 10px 20px -10px rgba(217, 70, 239, 0.5); 
+    }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 15px 25px -10px rgba(217, 70, 239, 0.6); }
+    .btn:active { transform: translateY(0); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+    .btn-danger { background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); box-shadow: 0 10px 20px -10px rgba(239, 68, 68, 0.5); }
+    .btn-sm { width: auto; padding: 8px 16px; font-size: 13px; }
+    .btn-outline { background: transparent; color: #cbd5e1; border: 1px solid rgba(255,255,255,0.2); box-shadow: none; }
+    .btn-outline:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.4); box-shadow: none; }
+
+    /* Alerts */
+    .alert { padding: 14px 18px; border-radius: 12px; margin-bottom: 24px; font-size: 14px; display: flex; align-items: center; gap: 10px; animation: slideIn 0.3s ease; }
+    @keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    .alert-error { background: rgba(239, 68, 68, 0.1); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.2); }
+    .alert-success { background: rgba(34, 197, 94, 0.1); color: #86efac; border: 1px solid rgba(34, 197, 94, 0.2); }
+
+    /* Dashboard */
+    .app-wrap { min-height: 100vh; display: flex; flex-direction: column; }
+    nav { 
+      background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.08);
+      padding: 0 40px; height: 70px; display: flex; align-items: center; justify-content: space-between; 
+      position: sticky; top: 0; z-index: 10; 
+    }
+    nav .logo { font-size: 22px; font-weight: 800; background: linear-gradient(to right, #a855f7, #ec4899); -webkit-background-clip: text; color: transparent; letter-spacing: -0.5px; }
+    nav .nav-right { display: flex; align-items: center; gap: 20px; }
+    .badge { background: rgba(139, 92, 246, 0.2); color: #c4b5fd; border: 1px solid rgba(139, 92, 246, 0.3); font-size: 11px; padding: 4px 10px; border-radius: 20px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; }
+    .badge.admin { background: rgba(245, 158, 11, 0.2); color: #fcd34d; border-color: rgba(245, 158, 11, 0.3); }
+    .logout-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 8px 18px; border-radius: 10px; cursor: pointer; font-size: 13px; color: #cbd5e1; font-weight: 600; transition: all .2s; }
+    .logout-btn:hover { background: rgba(239, 68, 68, 0.1); color: #fca5a5; border-color: rgba(239, 68, 68, 0.3); }
+
+    .main { max-width: 1000px; margin: 0 auto; padding: 40px 20px; width: 100%; z-index: 1; }
+
+    /* Stats */
+    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 40px; }
+    .stat-card { border-radius: 20px; padding: 24px; display: flex; flex-direction: column; justify-content: center; transition: transform .3s ease; }
+    .stat-card:hover { transform: translateY(-5px); }
+    .stat-card .num { font-size: 40px; font-weight: 800; color: #fff; margin-bottom: 4px; line-height: 1; }
+    .stat-card .lbl { font-size: 14px; font-weight: 500; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; }
+
+    /* Cards */
+    .card { border-radius: 20px; padding: 32px; margin-bottom: 32px; }
+    .card h2 { font-size: 22px; font-weight: 700; color: #fff; margin-bottom: 24px; }
+    .inline-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+    /* Task List Filters */
+    .filters { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; background: rgba(15, 23, 42, 0.4); padding: 8px; border-radius: 16px; width: fit-content; }
+    .filter-btn { padding: 8px 16px; border: none; background: transparent; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 600; color: #94a3b8; transition: all .2s; }
+    .filter-btn:hover { color: #fff; }
+    .filter-btn.active { background: rgba(255,255,255,0.1); color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+
+    /* Task Items */
+    .task-list { display: flex; flex-direction: column; gap: 16px; }
+    .task-item { border-radius: 16px; padding: 24px; display: flex; align-items: center; gap: 20px; position: relative; overflow: hidden; transition: all .3s ease; }
+    .task-item:hover { transform: translateX(5px); background: rgba(30, 41, 59, 0.8); }
+    .task-item::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
+    .task-item.high::before { background: #ef4444; box-shadow: 0 0 10px #ef4444; }
+    .task-item.medium::before { background: #f59e0b; box-shadow: 0 0 10px #f59e0b; }
+    .task-item.low::before { background: #10b981; box-shadow: 0 0 10px #10b981; }
+    .task-item.completed { opacity: 0.5; filter: grayscale(0.5); }
+    .task-item.completed:hover { opacity: 0.8; filter: none; }
+    
+    .task-content { flex: 1; }
+    .task-title { font-weight: 700; font-size: 17px; margin-bottom: 6px; color: #fff; }
+    .task-desc { font-size: 14px; color: #cbd5e1; margin-bottom: 12px; line-height: 1.5; }
+    
+    .task-meta { display: flex; gap: 10px; flex-wrap: wrap; }
+    .chip { padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border: 1px solid transparent; }
+    .chip-status-pending { background: rgba(234, 179, 8, 0.15); color: #fde047; border-color: rgba(234, 179, 8, 0.3); }
+    .chip-status-in_progress { background: rgba(59, 130, 246, 0.15); color: #93c5fd; border-color: rgba(59, 130, 246, 0.3); }
+    .chip-status-completed { background: rgba(16, 185, 129, 0.15); color: #6ee7b7; border-color: rgba(16, 185, 129, 0.3); }
+    
+    .chip-priority-high { background: rgba(239, 68, 68, 0.15); color: #fca5a5; border-color: rgba(239, 68, 68, 0.3); }
+    .chip-priority-medium { background: rgba(245, 158, 11, 0.15); color: #fcd34d; border-color: rgba(245, 158, 11, 0.3); }
+    .chip-priority-low { background: rgba(16, 185, 129, 0.15); color: #6ee7b7; border-color: rgba(16, 185, 129, 0.3); }
+    
+    .task-actions { display: flex; gap: 10px; opacity: 0.7; transition: opacity .2s; }
+    .task-item:hover .task-actions { opacity: 1; }
+
+    /* Modal */
+    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 20px; animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .modal { border-radius: 24px; padding: 40px; width: 100%; max-width: 500px; animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
+    .modal h2 { font-size: 24px; font-weight: 700; margin-bottom: 24px; color: #fff; }
+    .modal-footer { display: flex; gap: 16px; margin-top: 32px; }
+
+    .empty { text-align: center; padding: 60px 20px; }
+    .empty .icon { font-size: 56px; margin-bottom: 16px; filter: drop-shadow(0 10px 10px rgba(0,0,0,0.2)); }
+    .empty p { color: #94a3b8; font-size: 16px; font-weight: 500; }
+
+    @media (max-width: 768px) {
+      .inline-row { grid-template-columns: 1fr; }
+      .stats-row { grid-template-columns: 1fr; }
+      nav { padding: 0 20px; }
+      .task-item { flex-direction: column; align-items: flex-start; }
+      .task-actions { width: 100%; margin-top: 10px; justify-content: flex-end; }
+    }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const API = "http://localhost:5000/api/v1";
+
+// ─── API HELPERS ─────────────────────────────────────────────────────────────
+const api = {
+  headers: (token) => ({
+    "Content-Type": "application/json",
+    ...(token ? { Authorization: `Bearer ${token}` } : {})
+  }),
+  async post(url, body, token) {
+    const r = await fetch(API + url, { method: "POST", headers: api.headers(token), body: JSON.stringify(body) });
+    return r.json();
+  },
+  async get(url, token, params = {}) {
+    const q = new URLSearchParams(params).toString();
+    const r = await fetch(API + url + (q ? "?" + q : ""), { headers: api.headers(token) });
+    return r.json();
+  },
+  async put(url, body, token) {
+    const r = await fetch(API + url, { method: "PUT", headers: api.headers(token), body: JSON.stringify(body) });
+    return r.json();
+  },
+  async del(url, token) {
+    const r = await fetch(API + url, { method: "DELETE", headers: api.headers(token) });
+    return r.json();
+  }
+};
+
+// ─── COMPONENTS ──────────────────────────────────────────────────────────────
+function Alert({ msg, type }) {
+  if (!msg) return null;
+  return <div className={`alert alert-${type}`}>{msg}</div>;
+}
+
+function AuthPage({ onLogin }) {
+  const [tab, setTab] = React.useState("login");
+  const [form, setForm] = React.useState({ username: "", email: "", password: "" });
+  const [msg, setMsg] = React.useState(null);
+  const [loading, setLoading] = React.useState(false);
+
+  const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+
+  const submit = async () => {
+    setMsg(null);
+    setLoading(true);
+    try {
+      const endpoint = tab === "login" ? "/auth/login" : "/auth/register";
+      const body = tab === "login"
+        ? { email: form.email, password: form.password }
+        : { username: form.username, email: form.email, password: form.password };
+      const res = await api.post(endpoint, body);
+      if (res.success) {
+        localStorage.setItem("token", res.data.access_token);
+        localStorage.setItem("user", JSON.stringify(res.data.user));
+        onLogin(res.data.user, res.data.access_token);
+      } else {
+        setMsg({ text: res.message, type: "error" });
+      }
+    } catch {
+      setMsg({ text: "Connection failed. Is the backend running?", type: "error" });
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div className="auth-wrap">
+      <div className="auth-card glass">
+        <h1>Primetrade-assignment</h1>
+        <p>Manage your tasks efficiently</p>
+        <div className="tab-row">
+          <button className={`tab-btn ${tab === "login" ? "active" : ""}`} onClick={() => setTab("login")}>Login</button>
+          <button className={`tab-btn ${tab === "register" ? "active" : ""}`} onClick={() => setTab("register")}>Register</button>
+        </div>
+        <Alert msg={msg?.text} type={msg?.type} />
+        {tab === "register" && (
+          <div className="form-group">
+            <label>Username</label>
+            <input placeholder="johndoe" value={form.username} onChange={e => set("username", e.target.value)} />
+          </div>
+        )}
+        <div className="form-group">
+          <label>Email</label>
+          <input type="email" placeholder="john@example.com" value={form.email} onChange={e => set("email", e.target.value)} />
+        </div>
+        <div className="form-group">
+          <label>Password</label>
+          <input type="password" placeholder="••••••••" value={form.password} onChange={e => set("password", e.target.value)}
+            onKeyDown={e => e.key === "Enter" && submit()} />
+        </div>
+        <button className="btn" onClick={submit} disabled={loading}>
+          {loading ? "Please wait..." : tab === "login" ? "Login" : "Create Account"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function TaskModal({ task, onClose, onSave }) {
+  const [form, setForm] = React.useState(task || { title: "", description: "", status: "pending", priority: "medium", due_date: "" });
+  const [msg, setMsg] = React.useState(null);
+  const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+
+  return (
+    <div className="overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="modal glass">
+        <h2>{task ? "Edit Task" : "New Task"}</h2>
+        <Alert msg={msg?.text} type={msg?.type} />
+        <div className="form-group">
+          <label>Title *</label>
+          <input placeholder="Task title" value={form.title} onChange={e => set("title", e.target.value)} />
+        </div>
+        <div className="form-group">
+          <label>Description</label>
+          <textarea placeholder="Optional details..." value={form.description} onChange={e => set("description", e.target.value)} />
+        </div>
+        <div className="inline-row">
+          <div className="form-group">
+            <label>Status</label>
+            <select value={form.status} onChange={e => set("status", e.target.value)}>
+              <option value="pending">Pending</option>
+              <option value="in_progress">In Progress</option>
+              <option value="completed">Completed</option>
+            </select>
+          </div>
+          <div className="form-group">
+            <label>Priority</label>
+            <select value={form.priority} onChange={e => set("priority", e.target.value)}>
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+            </select>
+          </div>
+        </div>
+        <div className="form-group">
+          <label>Due Date</label>
+          <input type="datetime-local" value={form.due_date?.slice(0, 16) || ""} onChange={e => set("due_date", e.target.value)} />
+        </div>
+        <div className="modal-footer">
+          <button className="btn btn-outline btn-sm" onClick={onClose} style={{flex:1}}>Cancel</button>
+          <button className="btn btn-sm" style={{flex:2}} onClick={() => {
+            if (!form.title.trim()) { setMsg({ text: "Title is required", type: "error" }); return; }
+            onSave(form);
+          }}>
+            {task ? "Update Task" : "Create Task"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Dashboard({ user, token, onLogout }) {
+  const [tasks, setTasks] = React.useState([]);
+  const [filter, setFilter] = React.useState("all");
+  const [modal, setModal] = React.useState(null); // null | "create" | task_obj
+  const [msg, setMsg] = React.useState(null);
+  const [loading, setLoading] = React.useState(true);
+
+  const showMsg = (text, type = "success") => {
+    setMsg({ text, type });
+    setTimeout(() => setMsg(null), 3500);
+  };
+
+  const loadTasks = async () => {
+    setLoading(true);
+    const params = filter !== "all" ? { status: filter } : {};
+    const res = await api.get("/tasks", token, params);
+    if (res.success) setTasks(res.data);
+    setLoading(false);
+  };
+
+  React.useEffect(() => { loadTasks(); }, [filter]);
+
+  const handleSave = async (form) => {
+    try {
+      let res;
+      if (modal && modal.id) {
+        res = await api.put(`/tasks/${modal.id}`, form, token);
+      } else {
+        res = await api.post("/tasks", form, token);
+      }
+      if (res.success) {
+        showMsg(modal?.id ? "Task updated!" : "Task created!");
+        setModal(null);
+        loadTasks();
+      } else {
+        showMsg(res.message, "error");
+      }
+    } catch {
+      showMsg("Request failed", "error");
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Delete this task?")) return;
+    const res = await api.del(`/tasks/${id}`, token);
+    if (res.success) { showMsg("Task deleted"); loadTasks(); }
+    else showMsg(res.message, "error");
+  };
+
+  const stats = {
+    total: tasks.length,
+    pending: tasks.filter(t => t.status === "pending").length,
+    done: tasks.filter(t => t.status === "completed").length,
+  };
+
+  const filters = ["all", "pending", "in_progress", "completed"];
+
+  return (
+    <div className="app-wrap">
+      <nav>
+        <span className="logo">Primetrade-assignment</span>
+        <div className="nav-right">
+          <span style={{ fontSize: 14, color: "#64748b" }}>Hi, <strong>{user.username}</strong></span>
+          <span className={`badge ${user.role === "admin" ? "admin" : ""}`}>{user.role}</span>
+          <button className="logout-btn" onClick={onLogout}>Logout</button>
+        </div>
+      </nav>
+
+      <div className="main">
+        {msg && <Alert msg={msg.text} type={msg.type} />}
+
+        <div className="stats-row">
+          <div className="stat-card glass"><div className="num">{stats.total}</div><div className="lbl">Total Tasks</div></div>
+          <div className="stat-card glass"><div className="num" style={{color:"#fcd34d"}}>{stats.pending}</div><div className="lbl">Pending</div></div>
+          <div className="stat-card glass"><div className="num" style={{color:"#6ee7b7"}}>{stats.done}</div><div className="lbl">Completed</div></div>
+        </div>
+
+        <div className="card glass">
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+            <h2 style={{ margin: 0 }}>My Tasks</h2>
+            <button className="btn btn-sm" style={{ width: "auto" }} onClick={() => setModal("create")}>+ New Task</button>
+          </div>
+          <div className="filters">
+            {filters.map(f => (
+              <button key={f} className={`filter-btn ${filter === f ? "active" : ""}`} onClick={() => setFilter(f)}>
+                {f === "all" ? "All" : f.replace("_", " ").replace(/\b\w/g, c => c.toUpperCase())}
+              </button>
+            ))}
+          </div>
+
+          {loading ? (
+            <div className="empty"><div className="icon">⏳</div><p>Loading tasks...</p></div>
+          ) : tasks.length === 0 ? (
+            <div className="empty"><div className="icon">📋</div><p>No tasks found. Create your first task!</p></div>
+          ) : (
+            <div className="task-list">
+              {tasks.map(task => (
+                <div key={task.id} className={`task-item glass ${task.priority} ${task.status === "completed" ? "completed" : ""}`}>
+                  <div className="task-content">
+                    <div className="task-title">{task.title}</div>
+                    {task.description && <div className="task-desc">{task.description}</div>}
+                    <div className="task-meta">
+                      <span className={`chip chip-status-${task.status}`}>{task.status.replace("_", " ")}</span>
+                      <span className={`chip chip-priority-${task.priority}`}>{task.priority}</span>
+                      {task.due_date && <span className="chip" style={{ background: "#f1f5f9", color: "#475569" }}>📅 {new Date(task.due_date).toLocaleDateString()}</span>}
+                    </div>
+                  </div>
+                  <div className="task-actions">
+                    <button className="btn btn-outline btn-sm" onClick={() => setModal(task)}>Edit</button>
+                    <button className="btn btn-danger btn-sm" onClick={() => handleDelete(task.id)}>Del</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {(modal === "create" || (modal && modal.id)) && (
+        <TaskModal
+          task={modal === "create" ? null : modal}
+          onClose={() => setModal(null)}
+          onSave={handleSave}
+        />
+      )}
+    </div>
+  );
+}
+
+// ─── APP ROOT ─────────────────────────────────────────────────────────────────
+function App() {
+  const [auth, setAuth] = React.useState(() => {
+    try {
+      const token = localStorage.getItem("token");
+      const user = JSON.parse(localStorage.getItem("user") || "null");
+      return token && user ? { token, user } : null;
+    } catch { return null; }
+  });
+
+  const handleLogin = (user, token) => setAuth({ user, token });
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    setAuth(null);
+  };
+
+  if (!auth) return <AuthPage onLogin={handleLogin} />;
+  return <Dashboard user={auth.user} token={auth.token} onLogout={handleLogout} />;
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
