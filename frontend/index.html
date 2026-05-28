@@ -174,7 +174,7 @@
 <script type="text/babel">
 const API = "http://localhost:5000/api/v1";
 
-// ─── API HELPERS ─────────────────────────────────────────────────────────────
+// ─── API HELPERS ─────────────────────────────────────────────────────────────//
 const api = {
   headers: (token) => ({
     "Content-Type": "application/json",
@@ -199,7 +199,7 @@ const api = {
   }
 };
 
-// ─── COMPONENTS ──────────────────────────────────────────────────────────────
+// ─── COMPONENTS ──────────────────────────────────────────────────────────────//
 function Alert({ msg, type }) {
   if (!msg) return null;
   return <div className={`alert alert-${type}`}>{msg}</div>;
@@ -451,7 +451,7 @@ function Dashboard({ user, token, onLogout }) {
   );
 }
 
-// ─── APP ROOT ─────────────────────────────────────────────────────────────────
+// ─── APP ROOT ─────────────────────────────────────────────────────────────────//
 function App() {
   const [auth, setAuth] = React.useState(() => {
     try {
