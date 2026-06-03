@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify  # pyright: ignore[reportMissingImports]
+from flask import Blueprint, request, jsonify, current_app  # pyright: ignore[reportMissingImports]
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity  # pyright: ignore[reportMissingImports]
 from app import db
 from app.models.user import User
@@ -73,6 +73,7 @@ def register():
     user.set_password(password)
     db.session.add(user)
     db.session.commit()
+    current_app.logger.info(f"New user registered: Username={username}, Email={email}")
 
     token = create_access_token(identity=user.id)
     return success_response(
@@ -123,12 +124,15 @@ def login():
 
     user = User.query.filter_by(email=email).first()
     if not user or not user.check_password(password):
+        current_app.logger.warning(f"Failed login attempt for email: {email}")
         return error_response("Invalid email or password", 401)
 
     if not user.is_active:
+        current_app.logger.warning(f"Deactivated user login attempt: {email}")
         return error_response("Your account has been deactivated", 403)
 
     token = create_access_token(identity=user.id)
+    current_app.logger.info(f"User logged in successfully: Email={email}, Role={user.role}")
     return success_response(
         "Login successful",
         {"user": user.to_dict(), "access_token": token}

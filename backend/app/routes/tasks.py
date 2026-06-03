@@ -1,4 +1,4 @@
-from flask import Blueprint, request
+from flask import Blueprint, request, current_app
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app import db
 from app.models.task import Task
@@ -153,6 +153,7 @@ def create_task():
     )
     db.session.add(task)
     db.session.commit()
+    current_app.logger.info(f"Task created successfully: ID={task.id}, Title='{task.title}' by User={user_id}")
     return success_response("Task created successfully", task.to_dict(), 201)
 
 
@@ -233,6 +234,7 @@ def update_task(task_id):
 
     task.updated_at = datetime.utcnow()
     db.session.commit()
+    current_app.logger.info(f"Task updated successfully: ID={task.id} by User={user_id}")
     return success_response("Task updated successfully", task.to_dict())
 
 
@@ -264,4 +266,5 @@ def delete_task(task_id):
 
     db.session.delete(task)
     db.session.commit()
+    current_app.logger.info(f"Task deleted successfully: ID={task_id} by User={user_id}")
     return success_response("Task deleted successfully")

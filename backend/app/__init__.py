@@ -19,6 +19,27 @@ migrate = Migrate()
 def create_app():
     app = Flask(__name__)
 
+    # Configure logging
+    import logging
+    from logging.handlers import RotatingFileHandler
+    
+    log_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    
+    # Console Handler
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(log_formatter)
+    console_handler.setLevel(logging.INFO)
+    app.logger.addHandler(console_handler)
+    
+    # File Handler
+    file_handler = RotatingFileHandler('app.log', maxBytes=100000, backupCount=3)
+    file_handler.setFormatter(log_formatter)
+    file_handler.setLevel(logging.INFO)
+    app.logger.addHandler(file_handler)
+    
+    app.logger.setLevel(logging.INFO)
+    app.logger.info("Application started and logging initialized!")
+
     # Config
     app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "dev-secret-key")
     app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv(
